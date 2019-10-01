@@ -3,3 +3,9 @@ env/
 
 # Ignore Results folder
 Results/
+
+# Ignore temporary .input
+case.input
+
+# Ignore galaxy lists
+*.dat

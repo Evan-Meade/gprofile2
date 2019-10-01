@@ -201,7 +201,7 @@ def gen_ellip():
 
     # Ensures generated ellipticity is in [0, 1]
     ellip = -1.0
-    while ellip < 0 or ellip > 1:
+    while ellip < 0 or ellip > .9:
         # Generates random sample from distribution
         ellip = np.random.normal(mean, disp, None)
 

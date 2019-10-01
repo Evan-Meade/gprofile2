@@ -22,8 +22,9 @@ Template format (for gprofile):
 - Must be a .input file
 - Set "prefix out"
     - If prefix set to something else, will have to modify calls here
-- Ordinary .input glafic file except for two flagged lines to be iterated
+- Ordinary .input glafic file except for three flagged lines to be iterated
     - **SIE**: this line will be systematically iterated over galaxy list
+    - **SHEAR**: this line will be randomly sampled for external shear
     - **POINT**: this line will be randomly sampled over given sample space
 
 Recommended parameter space:
