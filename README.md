@@ -50,3 +50,5 @@ Usage instructions:
 
 At the moment, this code bundle is intended for use only by members of
 Dr. Lindsay King's group until otherwise specified by the PI.
+
+Created by Evan Meade (github.com/Evan-Meade, aka. kracken9500), 2019
