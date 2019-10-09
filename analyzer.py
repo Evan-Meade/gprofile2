@@ -147,7 +147,7 @@ def process_dat():
             min_delays.append(cmin_delay)   # Min delay for sample
 
     '''
-    From here on out, it is just procedurally writing different output
+    For this next section, it is just procedurally writing different output
     files to the trial folder. Contents of each file are described in
     method header. Can easily add or adjust file outputs by adding another
     write with block or adjusting existing ones; all will go into the
@@ -171,40 +171,63 @@ def process_dat():
         for i in range(0, len(image_delays)):
             imgs.writelines(f"{image_delays[i]},{image_mags[i]}\n")
 
-    sorted_min_delays = min_delays
-    sorted_min_delays.sort()
-    percent_below = []
-    days = []
+    '''
+    This section utilizes the same decomposed data written to files to
+    generate a series of useful visualizations. Plots, histograms, and
+    fitted curves are all used to better examine the relationship between
+    different variables.
+    '''
+
+    # Approximates a cumulative distribution function (CDF) for min delays
+    sorted_min_delays = min_delays   # Copies of min_delays
+    sorted_min_delays.sort()   # Sorts min_delays in ascending order
+    percent_below = []   # Stores CDF approximation for each amount of days
+    days = []   # Lists days for plotting against
+
+    # Loops through sorted_min_delays approximating CDF
     for i in range(1, 31):
-        days.append(i)
+        days.append(i)   # Appends day to days
+
+        # Loops through sorted_min_delays until element exceeds days
         for j in range(0, len(sorted_min_delays)):
             if sorted_min_delays[j] > i:
                 num_below = j
                 break
+
+        # Appends percentage of min delays below days
         percent_below.append(num_below / len(sorted_min_delays))
 
+    # Plots CDF for probability of interference in n-Day observation window
+    plt.figure(1)   # Numbers plot for multiple figure display at end
     plt.plot(days, percent_below, 'r--')
     plt.xlabel("Days")
     plt.ylabel("% of Systems with Min TD Below Days")
     plt.title("Likelihood of Interference with n-Day Observation Windows")
-    plt.show()
+    #plt.show()
 
-    plt.scatter(pair_delays, pair_mags)
-    plt.xlabel("Time Delay (Days)")
-    plt.ylabel("Mag(Leading) / Mag(Trailing)")
-    plt.title("Image Pair Mag Ratios Vs. TD")
-    plt.show()
+    # Plots magnification ratio against time delay between each image pair
+    # plt.scatter(pair_delays, pair_mags)
+    # plt.xlabel("Time Delay (Days)")
+    # plt.ylabel("Mag(Leading) / Mag(Trailing)")
+    # plt.title("Image Pair Mag Ratios Vs. TD")
+    # plt.show()
 
+    # Preps image_delays for use in log histogram
     chopped_image_delays = []
     for i in range(0, len(image_delays)):
+        # Trims elements to be within given range
         if image_delays[i] > 0 and image_delays[i] <= 45:
+            # Appends log of each element in given range
             chopped_image_delays.append(math.log(image_delays[i]))
 
+    # Plots a log histogram of the image delays relative to first image
+    plt.figure(2)
     plt.hist(chopped_image_delays, bins=50)
-    #plt.xscale('log')
     plt.xlabel("Log of Time Delay (Days)")
     plt.ylabel("Number of Systems")
     plt.title("Histogram of Time Delays")
+
+    # Shows all figures
     plt.show()
 
 
