@@ -48,7 +48,5 @@ Usage instructions:
   - Ex. "python analyzer.py Results/gals.dat---Trial000"
 8. Interpret given results or feed .npy files into further interpretation
 
-At the moment, this code bundle is intended for use only by members of
-Dr. Lindsay King's group until otherwise specified by the PI.
-
-Created by Evan Meade (github.com/Evan-Meade, aka. kracken9500), 2019
+Created by Evan Meade (https://github.com/Evan-Meade, aka. kracken9500), 2019
+Research group of Dr. Lindsay King (UTD)
