@@ -49,4 +49,5 @@ Usage instructions:
 8. Interpret given results or feed .npy files into further interpretation
 
 Created by Evan Meade (https://github.com/Evan-Meade, aka. kracken9500), 2019
+
 Research group of Dr. Lindsay King (UTD)
