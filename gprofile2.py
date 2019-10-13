@@ -231,6 +231,7 @@ gen_shear_mag()
 Generates external shear magnitude from a log-normal distribution.
 '''
 def gen_shear_mag():
+    # Fix by regressing estimated points from graph
     return np.random.lognormal(0.05, 10 ** 0.2)
 
 
