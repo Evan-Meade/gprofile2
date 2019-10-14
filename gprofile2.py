@@ -121,7 +121,7 @@ collected, results are compiled into input files and written out to Results
 folder.
 '''
 def main():
-    # Inheriting shadowed global variables
+    # Inherits shadowed global variables
     global total_samp, trials, start_time, end_time, succ_percent
 
     random.seed(seed)   # Pseudorandom function is seeded with given value
