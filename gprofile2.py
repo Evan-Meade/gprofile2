@@ -61,7 +61,8 @@ import numpy as np
 
 
 lenses = []   # Stores list of lens strings
-num_samp = 20   # Number of samples to be taken for each lens
+num_lenses = 0   # Initializes variable for number of lenses
+num_samp = 2   # Number of samples to be taken for each lens
 
 seed = sys.argv[3]   # Random seed used in pseudorandom generation
 
@@ -122,7 +123,7 @@ folder.
 '''
 def main():
     # Inherits shadowed global variables
-    global total_samp, trials, start_time, end_time, succ_percent
+    global num_lenses, total_samp, trials, start_time, end_time, succ_percent
 
     random.seed(seed)   # Pseudorandom function is seeded with given value
 
@@ -132,13 +133,15 @@ def main():
             lenses.append(line.strip(f"\n"))
         gals.close()
 
+    num_lenses = len(lenses)
+
     trials = 0   # Tracks total number of good and bad runs
 
-    total_samp = len(lenses) * num_samp   # Calculates total samples to run
+    total_samp = num_lenses * num_samp   # Calculates total samples to run
     start_time = time.time()   # Used to time execution
 
     # Loop structure runs over all lenses for num_samp good trials each
-    for i in range(0, len(lenses)):
+    for i in range(0, num_lenses):
         dat.append([])
         for j in range(0, num_samp):
             good_run = False   # Sets to true if system is multiply imaged
@@ -231,8 +234,8 @@ gen_shear_mag()
 Generates external shear magnitude from a log-normal distribution.
 '''
 def gen_shear_mag():
-    # Fix by regressing estimated points from graph
-    return np.random.lognormal(0.05, 10 ** 0.2)
+    # Approximated function by looking at graph from Dalal and Watson
+    return np.exp(np.random.normal(np.log10(.025), .5 * (np.log10(.06) - np.log10(.01))))
 
 
 '''
@@ -247,10 +250,11 @@ def gen_shear_angle():
 '''
 gen_convergence()
 
-Generates convergence for external shear as a constant.
+Generates convergence for external shear from a log-normal distribution.
 '''
 def gen_convergence():
-    return 0.0
+    # Approximated function by looking at graph from Dalal and Watson
+    return np.exp(np.random.normal(np.log10(.015), .5 * (np.log10(.04) - np.log10(.007))))
 
 
 '''
@@ -294,18 +298,15 @@ Saves dat[] to a .npy binary file for analysis later.
 Saves dat[] with numpy, and also compiles basic execution statistics not
 contained by dat[] in a new .dat file.
 
-global_stats.dat:
-- Broad statistics related to the sampling space and execution parameters
+execution_stats.dat:
+- Basic statistics relating to the script's execution
 - Intended to be human-readable, so each line contains name followed by value
 - Contents
     - Number of Lenses
     - Samples per Lens
     - Total Samples
-    - Total Number of Images
-    - Total Number of Image Pairs
     - X Range: [xmin, xmax]
     - Y Range: [ymin, ymax]
-    - Redshift
     - Total Trials
     - Percent Good
         - Samples / Trials
@@ -336,15 +337,12 @@ def save_dat():
     np.save('raw_data', dat)
 
     # Writes data for "global_stats.dat"
-    with open("global_stats.dat", 'w') as stats:
+    with open("execution_stats.dat", 'w') as stats:
         stats.writelines(f"Number of Lenses: {num_lenses}\n")
         stats.writelines(f"Samples per Lens: {num_samp}\n")
         stats.writelines(f"Total Samples: {num_lenses * num_samp}\n")
-        stats.writelines(f"Total Number of Images: {sum(num_images)}\n")
-        stats.writelines(f"Total Number of Image Pairs: {len(pair_delays)}\n")
         stats.writelines(f"X Range: [{xmin}, {xmax}]\n")
         stats.writelines(f"Y Range: [{ymin}, {ymax}]\n")
-        stats.writelines(f"Redshift: {zsrc}\n")
         stats.writelines(f"Total Trials: {trials}\n")
         stats.writelines(f"Percent Good: {succ_percent}\n")
         stats.writelines(f"Execution Time (sec): {end_time - start_time}\n")
