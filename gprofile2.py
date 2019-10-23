@@ -62,7 +62,7 @@ import numpy as np
 
 lenses = []   # Stores list of lens strings
 num_lenses = 0   # Initializes variable for number of lenses
-num_samp = 2   # Number of samples to be taken for each lens
+num_samp = 10   # Number of samples to be taken for each lens
 
 seed = sys.argv[3]   # Random seed used in pseudorandom generation
 
@@ -234,8 +234,12 @@ gen_shear_mag()
 Generates external shear magnitude from a log-normal distribution.
 '''
 def gen_shear_mag():
-    # Approximated function by looking at graph from Dalal and Watson
-    return np.exp(np.random.normal(np.log10(.025), .5 * (np.log10(.06) - np.log10(.01))))
+    # Ensures generated magnitude is in (0, 1)
+    mag = -1
+    while mag <= 0 or mag >= 1:
+        # Approximated function by looking at graph from Dalal and Watson
+        mag = np.exp(np.random.normal(np.log10(.025), .5 * (np.log10(.06) - np.log10(.01))))
+    return mag
 
 
 '''
@@ -253,8 +257,11 @@ gen_convergence()
 Generates convergence for external shear from a log-normal distribution.
 '''
 def gen_convergence():
-    # Approximated function by looking at graph from Dalal and Watson
-    return np.exp(np.random.normal(np.log10(.015), .5 * (np.log10(.04) - np.log10(.007))))
+    k = -1
+    while k <= 0 or k >= 1:
+        # Approximated function by looking at graph from Dalal and Watson
+        k = np.exp(np.random.normal(np.log10(.015), .5 * (np.log10(.04) - np.log10(.007))))
+    return k
 
 
 '''
