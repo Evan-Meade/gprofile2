@@ -238,7 +238,7 @@ def process_dat():
             chopped_image_delays.append(math.log(image_delays[i]))
 
     # Plots a log histogram of the image delays relative to first image
-    plt.figure(2)
+    plt.figure(2)   # Numbers plot for multiple figure display at end
     plt.hist(chopped_image_delays, bins=50)
     plt.xlabel("Log of Time Delay (Days)")
     plt.ylabel("Number of Systems")
