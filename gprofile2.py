@@ -17,6 +17,7 @@ Dependencies:
 
 Execution format:
 python gprofile2.py {template glafic input} {galaxy list} {random seed}
+    {z lens} {z source}
 
 Template format (for gprofile):
 - Must be a .input file
@@ -91,12 +92,15 @@ dat = []
 dat_file = "out_point.dat"
 config_file = "case.input"
 
+# Lens parameters
+zlens = sys.argv[4]
+
 # Point range parameters
 xmin = -1.0
 ymin = -1.0
 xmax = 1.0
 ymax = 1.0
-zsrc = 3.0
+zsrc = sys.argv[5]
 
 # Derived point range parameters
 xrng = xmax - xmin
@@ -162,8 +166,13 @@ def main():
                                 point = gen_point()
                                 case.writelines(point)
                             elif "**SHEAR**" in line:
+                                # Writes randomly sampled external shear
                                 shear = gen_shear()
                                 case.writelines(shear)
+                            elif "**ZL**" in line:
+                                # Writes redshift of lens
+                                zl = gen_zl()
+                                case.writelines(zl)
                             else:
                                 case.writelines(line)
                         template.close()
@@ -262,6 +271,15 @@ def gen_convergence():
         # Approximated function by looking at graph from Dalal and Watson
         k = np.exp(np.random.normal(np.log10(.015), .5 * (np.log10(.04) - np.log10(.007))))
     return k
+
+
+'''
+gen_zl()
+
+Generates line for the redshift (z) of the lens.
+'''
+def gen_zl():
+    return f"zl   {zlens}"
 
 
 '''
