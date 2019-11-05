@@ -32,7 +32,7 @@ Usage instructions:
     * Same list will be generated if run with same parameters and seed
 6. Run gprofile2.py on the galaxy list using a template glafic .input file
   * This bundle was designed to analyze time delays using config.input
-  * "python gprofile2.py {template glafic input} {galaxy list} {random seed}"
+  * "python gprofile2.py {template glafic input} {galaxy list} {random seed} {z lens} {z source}"
   * Ex. "python gprofile2.py config.input gals.dat 12345678"
   * Each successful run of this will create a new trial folder in Results/
 7. Analyze .npy results with analyzer.py

@@ -27,6 +27,7 @@ Template format (for gprofile):
     - **SIE**: this line will be systematically iterated over galaxy list
     - **SHEAR**: this line will be randomly sampled for external shear
     - **POINT**: this line will be randomly sampled over given sample space
+    - **ZL**: this line will fill in the given redshift of the lens
 
 Recommended parameter space:
 - num_samp: 20
@@ -35,6 +36,7 @@ Recommended parameter space:
 - ymin: -1.0
 - xmax: 1.0
 - ymax: 1.0
+- zlens: 0.3
 - zsrc: 3.0
 - dat_file: "out_point.dat"
 - config_file: "case.input"
@@ -63,7 +65,7 @@ import numpy as np
 
 lenses = []   # Stores list of lens strings
 num_lenses = 0   # Initializes variable for number of lenses
-num_samp = 10   # Number of samples to be taken for each lens
+num_samp = 50   # Number of samples to be taken for each lens
 
 seed = sys.argv[3]   # Random seed used in pseudorandom generation
 
