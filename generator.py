@@ -199,9 +199,9 @@ def gen_ellip():
     mean = 0.3
     disp = 0.16
 
-    # Ensures generated ellipticity is in [0, 1]
+    # Ensures generated ellipticity is in (0, .9)
     ellip = -1.0
-    while ellip < 0 or ellip > .9:
+    while ellip <= 0 or ellip >= .9:
         # Generates random sample from distribution
         ellip = np.random.normal(mean, disp, None)
 

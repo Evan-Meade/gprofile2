@@ -17,6 +17,7 @@ Dependencies:
 
 Execution format:
 python gprofile2.py {template glafic input} {galaxy list} {random seed}
+    {z lens} {z source}
 
 Template format (for gprofile):
 - Must be a .input file
@@ -26,6 +27,7 @@ Template format (for gprofile):
     - **SIE**: this line will be systematically iterated over galaxy list
     - **SHEAR**: this line will be randomly sampled for external shear
     - **POINT**: this line will be randomly sampled over given sample space
+    - **ZL**: this line will fill in the given redshift of the lens
 
 Recommended parameter space:
 - num_samp: 20
@@ -34,6 +36,7 @@ Recommended parameter space:
 - ymin: -1.0
 - xmax: 1.0
 - ymax: 1.0
+- zlens: 0.3
 - zsrc: 3.0
 - dat_file: "out_point.dat"
 - config_file: "case.input"
@@ -61,7 +64,8 @@ import numpy as np
 
 
 lenses = []   # Stores list of lens strings
-num_samp = 20   # Number of samples to be taken for each lens
+num_lenses = 0   # Initializes variable for number of lenses
+num_samp = 50   # Number of samples to be taken for each lens
 
 seed = sys.argv[3]   # Random seed used in pseudorandom generation
 
@@ -90,12 +94,15 @@ dat = []
 dat_file = "out_point.dat"
 config_file = "case.input"
 
+# Lens parameters
+zlens = sys.argv[4]
+
 # Point range parameters
 xmin = -1.0
 ymin = -1.0
 xmax = 1.0
 ymax = 1.0
-zsrc = 3.0
+zsrc = sys.argv[5]
 
 # Derived point range parameters
 xrng = xmax - xmin
@@ -122,7 +129,7 @@ folder.
 '''
 def main():
     # Inherits shadowed global variables
-    global total_samp, trials, start_time, end_time, succ_percent
+    global num_lenses, total_samp, trials, start_time, end_time, succ_percent
 
     random.seed(seed)   # Pseudorandom function is seeded with given value
 
@@ -132,13 +139,15 @@ def main():
             lenses.append(line.strip(f"\n"))
         gals.close()
 
+    num_lenses = len(lenses)
+
     trials = 0   # Tracks total number of good and bad runs
 
-    total_samp = len(lenses) * num_samp   # Calculates total samples to run
+    total_samp = num_lenses * num_samp   # Calculates total samples to run
     start_time = time.time()   # Used to time execution
 
     # Loop structure runs over all lenses for num_samp good trials each
-    for i in range(0, len(lenses)):
+    for i in range(0, num_lenses):
         dat.append([])
         for j in range(0, num_samp):
             good_run = False   # Sets to true if system is multiply imaged
@@ -159,8 +168,13 @@ def main():
                                 point = gen_point()
                                 case.writelines(point)
                             elif "**SHEAR**" in line:
+                                # Writes randomly sampled external shear
                                 shear = gen_shear()
                                 case.writelines(shear)
+                            elif "**ZL**" in line:
+                                # Writes redshift of lens
+                                zl = gen_zl()
+                                case.writelines(zl)
                             else:
                                 case.writelines(line)
                         template.close()
@@ -231,8 +245,12 @@ gen_shear_mag()
 Generates external shear magnitude from a log-normal distribution.
 '''
 def gen_shear_mag():
-    # Fix by regressing estimated points from graph
-    return np.random.lognormal(0.05, 10 ** 0.2)
+    # Ensures generated magnitude is in (0, 1)
+    mag = -1
+    while mag <= 0 or mag >= 1:
+        # Approximated function by looking at graph from Dalal and Watson
+        mag = np.exp(np.random.normal(np.log10(.025), .5 * (np.log10(.06) - np.log10(.01))))
+    return mag
 
 
 '''
@@ -247,10 +265,23 @@ def gen_shear_angle():
 '''
 gen_convergence()
 
-Generates convergence for external shear as a constant.
+Generates convergence for external shear from a log-normal distribution.
 '''
 def gen_convergence():
-    return 0.0
+    k = -1
+    while k <= 0 or k >= 1:
+        # Approximated function by looking at graph from Dalal and Watson
+        k = np.exp(np.random.normal(np.log10(.015), .5 * (np.log10(.04) - np.log10(.007))))
+    return k
+
+
+'''
+gen_zl()
+
+Generates line for the redshift (z) of the lens.
+'''
+def gen_zl():
+    return f"zl   {zlens}"
 
 
 '''
@@ -294,18 +325,15 @@ Saves dat[] to a .npy binary file for analysis later.
 Saves dat[] with numpy, and also compiles basic execution statistics not
 contained by dat[] in a new .dat file.
 
-global_stats.dat:
-- Broad statistics related to the sampling space and execution parameters
+execution_stats.dat:
+- Basic statistics relating to the script's execution
 - Intended to be human-readable, so each line contains name followed by value
 - Contents
     - Number of Lenses
     - Samples per Lens
     - Total Samples
-    - Total Number of Images
-    - Total Number of Image Pairs
     - X Range: [xmin, xmax]
     - Y Range: [ymin, ymax]
-    - Redshift
     - Total Trials
     - Percent Good
         - Samples / Trials
@@ -336,15 +364,12 @@ def save_dat():
     np.save('raw_data', dat)
 
     # Writes data for "global_stats.dat"
-    with open("global_stats.dat", 'w') as stats:
+    with open("execution_stats.dat", 'w') as stats:
         stats.writelines(f"Number of Lenses: {num_lenses}\n")
         stats.writelines(f"Samples per Lens: {num_samp}\n")
         stats.writelines(f"Total Samples: {num_lenses * num_samp}\n")
-        stats.writelines(f"Total Number of Images: {sum(num_images)}\n")
-        stats.writelines(f"Total Number of Image Pairs: {len(pair_delays)}\n")
         stats.writelines(f"X Range: [{xmin}, {xmax}]\n")
         stats.writelines(f"Y Range: [{ymin}, {ymax}]\n")
-        stats.writelines(f"Redshift: {zsrc}\n")
         stats.writelines(f"Total Trials: {trials}\n")
         stats.writelines(f"Percent Good: {succ_percent}\n")
         stats.writelines(f"Execution Time (sec): {end_time - start_time}\n")

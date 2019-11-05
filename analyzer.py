@@ -76,6 +76,14 @@ Compiles basic statistics from dat[] into a few files in a new folder.
 All output placed in "../Results/Trialxxx" where xxx iterates from 000. Thus,
 multiple trials can have outputs organized in the same master folder.
 
+global_stats.dat:
+- Broad statistics related to the sampling space and execution parameters
+- Intended to be human-readable, so each line contains name followed by value
+- Contents
+    - Total Samples
+    - Total Number of Images
+    - Total Number of Image Pairs
+
 image_pairs.dat:
 - Statistics computed for each pair of images
 - Line for each pair of images in the same sample
@@ -106,8 +114,10 @@ def process_dat():
     image_mags = []   # Magnification of each image
     min_delays = []   # Minimum relative delay between a system's image pairs
 
+    tot_samps = len(dat)
+
     # Loops through dat[] appending relevant statistics as needed
-    for i in range(0, len(dat)):
+    for i in range(0, tot_samps):
         for j in range(0, len(dat[i])):
             num_images.append(int(round(dat[i][j][0][0])))   # Number of imgs
             lens_mag = 0   # Used to sum up total magnification for a sample
@@ -153,6 +163,13 @@ def process_dat():
     write with block or adjusting existing ones; all will go into the
     same trial folder.
     '''
+
+    # Writes data for "global_stats.dat"
+    with open("global_stats.dat", 'w') as stats:
+        stats.writelines(f"Total Samples: {tot_samps}\n")
+        stats.writelines(f"Total Number of Images: {sum(num_images)}\n")
+        stats.writelines(f"Total Number of Image Pairs: {len(pair_delays)}\n")
+        stats.close()
 
     # Writes data for "image_pairs.dat"
     with open("image_pairs.dat", 'w') as pairs:
@@ -221,7 +238,7 @@ def process_dat():
             chopped_image_delays.append(math.log(image_delays[i]))
 
     # Plots a log histogram of the image delays relative to first image
-    plt.figure(2)
+    plt.figure(2)   # Numbers plot for multiple figure display at end
     plt.hist(chopped_image_delays, bins=50)
     plt.xlabel("Log of Time Delay (Days)")
     plt.ylabel("Number of Systems")
