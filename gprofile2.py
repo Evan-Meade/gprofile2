@@ -290,7 +290,7 @@ run_glafic()
 Executes glafic in bash shell using temporary .input file.
 '''
 def run_glafic():
-    run = subprocess.check_output(f"glafic {config_file}", shell=True)
+    run = subprocess.check_output(f"glafic {config_file} > /dev/null", shell=True)
 
 
 '''
