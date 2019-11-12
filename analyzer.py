@@ -220,14 +220,17 @@ def process_dat():
     plt.xlabel("Days")
     plt.ylabel("% of Systems with Min TD Below Days")
     plt.title("Likelihood of Interference with n-Day Observation Windows")
+    plt.savefig("interference_cdf.png")
     #plt.show()
 
     # Plots magnification ratio against time delay between each image pair
-    # plt.scatter(pair_delays, pair_mags)
-    # plt.xlabel("Time Delay (Days)")
-    # plt.ylabel("Mag(Leading) / Mag(Trailing)")
-    # plt.title("Image Pair Mag Ratios Vs. TD")
-    # plt.show()
+    plt.figure(2)
+    plt.scatter(pair_delays, pair_mags)
+    plt.xlabel("Time Delay (Days)")
+    plt.ylabel("Mag(Leading) / Mag(Trailing)")
+    plt.title("Image Pair Mag Ratios Vs. TD")
+    plt.savefig("image_ratios.png")
+    #plt.show()
 
     # Preps image_delays for use in log histogram
     chopped_image_delays = []
@@ -238,14 +241,15 @@ def process_dat():
             chopped_image_delays.append(math.log(image_delays[i]))
 
     # Plots a log histogram of the image delays relative to first image
-    plt.figure(2)   # Numbers plot for multiple figure display at end
+    plt.figure(3)   # Numbers plot for multiple figure display at end
     plt.hist(chopped_image_delays, bins=50)
     plt.xlabel("Log of Time Delay (Days)")
     plt.ylabel("Number of Systems")
     plt.title("Histogram of Time Delays")
+    plt.savefig("delay_histogram.png")
 
     # Shows all figures
-    plt.show()
+    #plt.show()
 
 
 # Calls main subroutine after defining all functions
