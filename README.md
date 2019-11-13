@@ -12,6 +12,8 @@ Dependencies:
   * Developed with version 1.17.0 in a Python3 venv
 * matplotlib
   * Developed with version 3.1.1 in a Python3 venv
+* progressbar2
+  * Developed with version 3.47.0 in a Python3 venv
 * glafic (added to $PATH)
   * Can be downloaded at https://www.slac.stanford.edu/~oguri/glafic/
   * UNIX only (Mac OSX and Linux (64 bit))

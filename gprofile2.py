@@ -13,11 +13,11 @@ Could be modified to test other functions over a given parameter space.
 Dependencies:
 - Python3
 - numpy
+- progressbar2
 - glafic (added to $PATH)
 
 Execution format:
-python gprofile2.py {template glafic input} {galaxy list} {random seed}
-    {z lens} {z source}
+python gprofile2.py {template glafic input} {number of samples} {random seed}
 
 Template format (for gprofile):
 - Must be a .input file
@@ -58,14 +58,14 @@ import subprocess
 import random
 import time
 import math
+from datetime import datetime
 
 # Library imports
 import numpy as np
+import progressbar   # Actually imports progressbar2, not progressbar
 
 
-lenses = []   # Stores list of lens strings
-num_lenses = 0   # Initializes variable for number of lenses
-num_samp = 50   # Number of samples to be taken for each lens
+num_samp = int(sys.argv[2])   # Total number of samples to be taken
 
 seed = sys.argv[3]   # Random seed used in pseudorandom generation
 
@@ -76,10 +76,9 @@ List containing all time delay output data for all samples.
 
 Frankly, this is a monster of a list. It is four dimensional.
 dat[i][j][k][l]
-- i: lens number
-- j: sample number for lens i
-- k: line number for dat file of lens i, sample j
-- l: element of line k of dat file of lens i, sample j
+- i: sample number
+- k: line number for dat file of sample i
+- l: element of line k of dat file of sample i
 
 Special values:
 - dat[i][j][0][0]: number of images for lens i, sample j
@@ -95,25 +94,50 @@ dat_file = "out_point.dat"
 config_file = "case.input"
 
 # Lens parameters
-zlens = sys.argv[4]
+zlens = .3
 
 # Point range parameters
 xmin = -1.0
 ymin = -1.0
 xmax = 1.0
 ymax = 1.0
-zsrc = sys.argv[5]
+zsrc = 3
 
 # Derived point range parameters
 xrng = xmax - xmin
 yrng = ymax - ymin
 
 # Initializes execution statistics to be defined later
-total_samp = 0
 trials = 0
 start_time = 0
 end_time = 0
 succ_percent = 0
+
+'''
+Following are variables controlling generation of SIE galactic lenses.
+'''
+
+# Global variables that define the scope of the list
+sigma_min = 75   # Minimum velocity dispersion
+sigma_max = 375   # Maximum velocity dispersion
+num_bins = 15   # Number of bins for velocity dispersion
+bin_size = (sigma_max - sigma_min) / num_bins   # Simple bin width
+
+# Global variables to aid in velocity dispersion distribution
+left_bounds = []
+freqs = []
+
+# Constants for velocity dispersion distribution
+phi_star = 2.099 * 10 ** -2   # units of (h/.7)^3Mpc^-3
+sigma_star = 113.78   # units of km/s
+alpha = 0.94
+beta = 1.85
+
+# Constants for all galaxies generated
+xcoord = 0.0
+ycoord = 0.0
+theta = 0.0
+rcore = 0.0
 
 
 '''
@@ -129,85 +153,172 @@ folder.
 '''
 def main():
     # Inherits shadowed global variables
-    global num_lenses, total_samp, trials, start_time, end_time, succ_percent
+    global trials, start_time, end_time, succ_percent
 
     random.seed(seed)   # Pseudorandom function is seeded with given value
-
-    # Reads in list of galaxies from file
-    with open(sys.argv[2], 'r') as gals:
-        for line in gals:
-            lenses.append(line.strip(f"\n"))
-        gals.close()
-
-    num_lenses = len(lenses)
+    disp_bins()   # Creates representative distribution of SIE sigmas
 
     trials = 0   # Tracks total number of good and bad runs
 
-    total_samp = num_lenses * num_samp   # Calculates total samples to run
     start_time = time.time()   # Used to time execution
 
+    widgets = ['\x1b[33mTotal Progress: \x1b[39m',
+               progressbar.Bar(marker='\x1b[32m#\x1b[39m'),
+               progressbar.Percentage()]
+    bar = progressbar.ProgressBar(widgets=widgets, max_value=num_samp).start()
+
     # Loop structure runs over all lenses for num_samp good trials each
-    for i in range(0, num_lenses):
-        dat.append([])
-        for j in range(0, num_samp):
-            good_run = False   # Sets to true if system is multiply imaged
-            while good_run == False:
-                trials += 1   # iterates trials since glafic is run
+    for i in range(0, num_samp):
+        good_run = False   # Sets to true if system is multiply imaged
+        while good_run == False:
+            trials += 1   # iterates trials since glafic is run
 
-                # Creates temporary .input file for glafic system
-                with open(config_file, 'w') as case:
-                    # Copies template file except for flagged lines
-                    with open(sys.argv[1], 'r') as template:
-                        for line in template:
-                            # Copies each line unless flagged
-                            if "**SIE**" in line:
-                                # Writes galaxy line i
-                                case.writelines(f"\n{lenses[i]}\n")
-                            elif "**POINT**" in line:
-                                # Writes randomly sampled point in range
-                                point = gen_point()
-                                case.writelines(point)
-                            elif "**SHEAR**" in line:
-                                # Writes randomly sampled external shear
-                                shear = gen_shear()
-                                case.writelines(shear)
-                            elif "**ZL**" in line:
-                                # Writes redshift of lens
-                                zl = gen_zl()
-                                case.writelines(zl)
-                            else:
-                                case.writelines(line)
-                        template.close()
-                    case.close()
+            # Creates temporary .input file for glafic system
+            with open(config_file, 'w') as case:
+                # Copies template file except for flagged lines
+                with open(sys.argv[1], 'r') as template:
+                    for line in template:
+                        # Copies each line unless flagged
+                        if "**SIE**" in line:
+                            # Writes randomly sampled SIE lens
+                            lens = gen_lens()
+                            case.writelines(lens)
+                        elif "**POINT**" in line:
+                            # Writes randomly sampled point in range
+                            point = gen_point()
+                            case.writelines(point)
+                        elif "**SHEAR**" in line:
+                            # Writes randomly sampled external shear
+                            shear = gen_shear()
+                            case.writelines(shear)
+                        elif "**ZL**" in line:
+                            # Writes redshift of lens
+                            zl = gen_zl()
+                            case.writelines(zl)
+                        else:
+                            case.writelines(line)
+                    template.close()
+                case.close()
 
-                run_glafic()   # Executes glafic with temporary .input file
+            run_glafic()   # Executes glafic with temporary .input file
 
-                # Reads output of glafic to see if multiply imaged (good)
-                if check_mult():
-                    good_run = True
+            # Reads output of glafic to see if multiply imaged (good)
+            if check_mult():
+                good_run = True
 
-            # If good sample (multiply imaged), writes to dat[]
-            write_dat(i)
+        # If good sample (multiply imaged), writes to dat[]
+        write_dat()
+        bar.update(i + 1)
 
     # Updates execution statistics
     end_time = time.time()
-    succ_percent = round(100 * total_samp / trials, 2)
+    succ_percent = round(100 * num_samp / trials, 2)
 
     # Deletes temporary files
     os.remove(config_file)
     os.remove(dat_file)
 
     # Prints entire dat matrix; more useful for debugging on small ranges
-    print(dat)
+    #print(dat)
 
     # Compiles statistical lists for dat[] and writes to Trialxxx in Results
     #process_dat()
     save_dat()
 
     # Prints execution statistics
-    print(f"\n\nTotal Samples: {total_samp}\nTotal Trials: {trials}")
+    print(f"\n\nTotal Samples: {num_samp}\nTotal Trials: {trials}")
     print(f"\nPercent Good: {succ_percent}%")
     print(f"\nTime Elapsed (sec): {end_time - start_time}\n")
+
+
+'''
+disp_bins()
+
+Generates representative distribution of sigmas within given range.
+
+First calculates the relative frequency of sigmas occurring in each
+bin, then generates a list with the needed number of samples. The
+number of samples for each bin is determined through relative frequency,
+and each sample is given by a uniform distribution within the bin bounds.
+'''
+def disp_bins():
+    # Calculates relative frequencies and bin bounds
+    total_freq = 0   # Used later to scale to num_gals
+    for i in range(0, num_bins):
+        sigma = sigma_min + i * bin_size
+        left_bounds.append(sigma)   # List of bin bounds
+        fr = phi_loc(sigma)
+        freqs.append(fr)   # List of relative frequencies
+        total_freq += fr
+
+    # Scales each entry in freqs to make them sum up to 1
+    correction = 1 / total_freq
+    freqs[0] = freqs[0] * correction
+    for i in range(1, len(freqs) - 1):
+        freqs[i] = freqs[i] * correction + freqs[i-1]
+    freqs[-1] = 1
+
+
+'''
+phi_loc(sigma)
+
+Returns the value of the phi_loc distribution at a given sigma.
+
+This function is given in M. Oguri (2018) to describe the observed
+distribution of velocity dispersions for SIE galaxy generation.
+'''
+def phi_loc(sigma):
+    return phi_star * (sigma / sigma_star) ** alpha * math.exp(-1 *
+        (sigma / sigma_star) ** beta) * beta / math.gamma(alpha / beta) / sigma
+
+
+'''
+gen_lens()
+
+Generates string of random SIE galactic lens within script parameters.
+'''
+def gen_lens():
+    disp = gen_disp()   # Obtains velocity dispersion parameter
+    ellip = gen_ellip()   # Obtains ellipticity parameter
+
+    # Formats galaxy as a string and returns it
+    gal = f"lens sie {disp} {xcoord} {ycoord} {ellip} {theta} {rcore} 0.0\n"
+    return gal
+
+
+'''
+gen_disp()
+
+Returns velocity dispersion randomly sampled from phi_loc.
+'''
+def gen_disp():
+    sigma = 0
+    bin_selector = random.random()
+    for i in range(0, len(freqs)):
+        if bin_selector <= freqs[i]:
+            sigma = random.uniform(left_bounds[i], left_bounds[i] + bin_size)
+            break
+    return sigma
+
+
+'''
+gen_ellip()
+
+Returns an ellipticity from [0,1] using normal distribution sampling.
+'''
+def gen_ellip():
+    # Defining distribution parameters
+    mean = 0.3
+    disp = 0.16
+
+    # Ensures generated ellipticity is in (0, .9)
+    ellip = -1.0
+    while ellip <= 0 or ellip >= .9:
+        # Generates random sample from distribution
+        ellip = np.random.normal(mean, disp, None)
+
+    # When conditions satisfied, returns ellip
+    return ellip
 
 
 '''
@@ -290,7 +401,7 @@ run_glafic()
 Executes glafic in bash shell using temporary .input file.
 '''
 def run_glafic():
-    run = subprocess.check_output(f"glafic {config_file} > /dev/null", shell=True)
+    run = subprocess.check_output(f"glafic {config_file} > /dev/null 2>&1", shell=True)
 
 
 '''
@@ -308,13 +419,13 @@ def check_mult():
 
 
 '''
-write_dat(i)
+write_dat()
 
-Appends current .dat output file to dat[] for lens i.
+Appends current .dat output file to dat[].
 '''
-def write_dat(i):
+def write_dat():
     output = np.loadtxt(dat_file)   # Loads .dat output file into numpy array
-    dat[i].append(output)   # Appends numpy array to lens i of dat[]
+    dat.append(output)   # Appends numpy array to lens i of dat[]
 
 
 '''
@@ -329,8 +440,6 @@ execution_stats.dat:
 - Basic statistics relating to the script's execution
 - Intended to be human-readable, so each line contains name followed by value
 - Contents
-    - Number of Lenses
-    - Samples per Lens
     - Total Samples
     - X Range: [xmin, xmax]
     - Y Range: [ymin, ymax]
@@ -348,26 +457,18 @@ def save_dat():
         os.mkdir(master_folder)
         os.chdir(master_folder)
 
-    # Calculates next unused trial number; creates and moves to that folder
-    searching = True
-    index = 0
-    while searching:
-        folder = f"{sys.argv[2]}---Trial{index:03}"
-        if os.path.exists(folder):
-            index += 1
-        else:
-            os.mkdir(folder)
-            os.chdir(folder)
-            searching = False
+    # Creates and moves to new folder based on current time and num_samp
+    test_time = str(datetime.fromtimestamp(start_time)).replace(' ', '_')
+    folder = f"{test_time}---{num_samp}"
+    os.mkdir(folder)
+    os.chdir(folder)
 
     # Saves dat[] to a .npy binary file
     np.save('raw_data', dat)
 
     # Writes data for "global_stats.dat"
     with open("execution_stats.dat", 'w') as stats:
-        stats.writelines(f"Number of Lenses: {num_lenses}\n")
-        stats.writelines(f"Samples per Lens: {num_samp}\n")
-        stats.writelines(f"Total Samples: {num_lenses * num_samp}\n")
+        stats.writelines(f"Total Samples: {num_samp}\n")
         stats.writelines(f"X Range: [{xmin}, {xmax}]\n")
         stats.writelines(f"Y Range: [{ymin}, {ymax}]\n")
         stats.writelines(f"Total Trials: {trials}\n")
