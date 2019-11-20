@@ -77,6 +77,7 @@ List containing all time delay output data for all samples.
 Frankly, this is a monster of a list. It is four dimensional.
 dat[i][j][k][l]
 - i: sample number
+- j: output file number (0 is output of "findimg")
 - k: line number for dat file of sample i
 - l: element of line k of dat file of sample i
 
@@ -219,7 +220,7 @@ def main():
     os.remove(dat_file)
 
     # Prints entire dat matrix; more useful for debugging on small ranges
-    #print(dat)
+    print(dat)
 
     # Compiles statistical lists for dat[] and writes to Trialxxx in Results
     #process_dat()
@@ -425,7 +426,7 @@ Appends current .dat output file to dat[].
 '''
 def write_dat():
     output = np.loadtxt(dat_file)   # Loads .dat output file into numpy array
-    dat.append(output)   # Appends numpy array to lens i of dat[]
+    dat.append([output])   # Appends numpy array to lens i of dat[]
 
 
 '''

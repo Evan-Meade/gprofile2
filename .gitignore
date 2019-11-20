@@ -9,3 +9,6 @@ case.input
 
 # Ignore galaxy lists
 *.dat
+
+# Ignore .fits images
+*.fits

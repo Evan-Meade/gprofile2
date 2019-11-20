@@ -118,43 +118,43 @@ def process_dat():
 
     # Loops through dat[] appending relevant statistics as needed
     for i in range(0, tot_samps):
-        for j in range(0, len(dat[i])):
-            num_images.append(int(round(dat[i][j][0][0])))   # Number of imgs
-            lens_mag = 0   # Used to sum up total magnification for a sample
+        j = 0
+        num_images.append(int(round(dat[i][j][0][0])))   # Number of imgs
+        lens_mag = 0   # Used to sum up total magnification for a sample
 
-            cmin_delay = -1.0   # Tracks current pairwise min_delay
+        cmin_delay = -1.0   # Tracks current pairwise min_delay
 
-            # Loops through all images; line 0 contains some global stats
-            for k in range(1, len(dat[i][j])):
-                lens_mag += abs(dat[i][j][k][2])   # Add to total mag
+        # Loops through all images; line 0 contains some global stats
+        for k in range(1, len(dat[i][j])):
+            lens_mag += abs(dat[i][j][k][2])   # Add to total mag
 
-                # Statistics for each image
-                ktime = dat[i][j][k][3]
-                kmag = dat[i][j][k][2]
-                image_delays.append(ktime)
-                image_mags.append(kmag)
+            # Statistics for each image
+            ktime = dat[i][j][k][3]
+            kmag = dat[i][j][k][2]
+            image_delays.append(ktime)
+            image_mags.append(kmag)
 
-                # Loops through pairs of images, avoiding doubles
-                for l in range(k + 1, len(dat[i][j])):
-                    # Statistics for paired image
-                    ltime = dat[i][j][l][3]
-                    lmag = dat[i][j][l][2]
+            # Loops through pairs of images, avoiding doubles
+            for l in range(k + 1, len(dat[i][j])):
+                # Statistics for paired image
+                ltime = dat[i][j][l][3]
+                lmag = dat[i][j][l][2]
 
-                    # Pair's mag ratio computed Leading / Trailing (unsigned)
-                    if ktime < ltime:
-                        pair_mags.append(abs(kmag)/abs(lmag))
-                    else:
-                        pair_mags.append(abs(lmag)/abs(kmag))
+                # Pair's mag ratio computed Leading / Trailing (unsigned)
+                if ktime < ltime:
+                    pair_mags.append(abs(kmag)/abs(lmag))
+                else:
+                    pair_mags.append(abs(lmag)/abs(kmag))
 
-                    # Pair's relative time delay in days
-                    pair_delays.append(abs(ktime - ltime))
+                # Pair's relative time delay in days
+                pair_delays.append(abs(ktime - ltime))
 
-                    # Compares each pair's delay against current min
-                    if cmin_delay < 0 or abs(ktime - ltime) < cmin_delay:
-                        cmin_delay = abs(ktime - ltime)
+                # Compares each pair's delay against current min
+                if cmin_delay < 0 or abs(ktime - ltime) < cmin_delay:
+                    cmin_delay = abs(ktime - ltime)
 
-            total_mag.append(lens_mag)   # Total magnification for sample
-            min_delays.append(cmin_delay)   # Min delay for sample
+        total_mag.append(lens_mag)   # Total magnification for sample
+        min_delays.append(cmin_delay)   # Min delay for sample
 
     '''
     For this next section, it is just procedurally writing different output
