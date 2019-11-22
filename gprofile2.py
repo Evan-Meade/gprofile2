@@ -59,6 +59,7 @@ import random
 import time
 import math
 from datetime import datetime
+import shutil
 
 # Library imports
 import numpy as np
@@ -415,6 +416,13 @@ def check_mult():
 
     # Reads element [0][0] to find number of images
     if output.shape != (4,) and output[0][0] > 1:
+        # Outputs sample configurations for specified number of images
+        # num_img = output[0][0]
+        # if num_img == 3:
+        #     shutil.copyfile(config_file, 'test_3_img.input')
+        # elif num_img == 5:
+        #     shutil.copyfile(config_file, 'test_5_img.input')
+
         return True   # If multiply imaged, returns True
     return False   # Otherwise, returns False
 

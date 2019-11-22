@@ -212,7 +212,7 @@ def process_dat():
                 break
 
         # Appends percentage of min delays below days
-        percent_below.append(num_below / len(sorted_min_delays))
+        percent_below.append(num_below / len(sorted_min_delays) * 100)
 
     # Plots CDF for probability of interference in n-Day observation window
     plt.figure(1)   # Numbers plot for multiple figure display at end
@@ -220,6 +220,7 @@ def process_dat():
     plt.xlabel("Days")
     plt.ylabel("% of Systems with Min TD Below Days")
     plt.title("Likelihood of Interference with n-Day Observation Windows")
+    plt.savefig("interference_cdf.png")
     #plt.show()
 
     # Plots magnification ratio against time delay between each image pair
@@ -243,6 +244,7 @@ def process_dat():
     plt.xlabel("Log of Time Delay (Days)")
     plt.ylabel("Number of Systems")
     plt.title("Histogram of Time Delays")
+    plt.savefig("log_td.png")
 
     # Shows all figures
     plt.show()
