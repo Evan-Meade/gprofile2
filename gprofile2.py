@@ -35,6 +35,12 @@ import numpy as np
 import pandas as pd
 import PySimpleGUI as sg
 
+# gprofile2 package imports
+import analyzer
+
+
+# Defines folder containing all results
+MASTER_FOLDER = "Results"
 
 '''
 Following are constants controlling generation of SIE galactic lenses.
@@ -52,6 +58,14 @@ def execute(values):
     print('gprofile2 executed')
     simulate(values)
 
+    trial_name = values['trial_name']
+    seed = values['seed']
+
+    # Prints final completion statement
+    print("\nExecution complete")
+
+    return f'{MASTER_FOLDER}', f'{trial_name}---{seed}'
+
 
 def simulate(values):
 
@@ -65,7 +79,7 @@ def simulate(values):
     seed = values['seed']
 
     # Columns of main dataframe
-    cols = ['run_number', 'lens_sigma', 'lens_z', 'lens_x',
+    cols = ['run_id', 'lens_sigma', 'lens_z', 'lens_x',
             'lens_y', 'lens_ellip', 'lens_theta',
             'lens_r_core', 'source_z', 'source_x',
             'source_y', 'shear_mag', 'shear_z', 'shear_x',
@@ -141,7 +155,7 @@ def simulate(values):
             '''
 
             # Logs run number
-            v['run_number'] = int(trials)
+            v['run_id'] = f'{seed}-{int(trials):09d}'
 
             # Generates and assigns lens parameters
             v['lens_sigma'] = gen_lens_disp(left_bounds, freqs, bin_size)
@@ -230,13 +244,19 @@ def simulate(values):
     print(data)
 
     # Writes data to Results
-    save_data(data, trial_name, execution_stats)
+    save_data(data, trial_name, execution_stats, seed)
 
     # Prints execution statistics
     print(f"\n\nTotal Samples: {num_samp}\nTotal Trials: {trials}")
     print(f"\nPercent Good: {succ_percent}%")
     print(f"\nTime Elapsed (sec): {end_time - start_time}\n")
-    print("\nExecution complete")
+    print("\nSimulation complete")
+
+    # Analyzes simulation results
+    analyzer.analyze()
+
+    # Navigates back to root project directory
+    os.chdir('../..')
 
 
 '''
@@ -383,26 +403,25 @@ execution_stats.csv:
         - Samples / Trials
     - Execution Time (sec)
 '''
-def save_data(data, trial_name, execution_stats):
+def save_data(data, trial_name, execution_stats, seed):
     # Moves to master folder for all results; creates if doesn't already exist
-    master_folder = "Results"
-    if os.path.exists(master_folder):
-        os.chdir(master_folder)
+    if os.path.exists(MASTER_FOLDER):
+        os.chdir(MASTER_FOLDER)
     else:
-        os.mkdir(master_folder)
-        os.chdir(master_folder)
+        os.mkdir(MASTER_FOLDER)
+        os.chdir(MASTER_FOLDER)
 
     # Creates and moves to new folder based on current time and num_samp
-    current_time = time.time()
-    test_time = str(datetime.fromtimestamp(current_time)).replace(' ', '_')
-    folder = f"{trial_name}---{test_time}"
+    # current_time = time.time()
+    # test_time = str(datetime.fromtimestamp(current_time)).replace(' ', '_')
+    folder = f"{trial_name}---{seed}"
     os.mkdir(folder)
     os.chdir(folder)
 
     # Saves data to an HDF5 file
     hdf = pd.HDFStore('data.h5')
-    hdf.put('data', data, data_columns=True)
+    hdf.put('trial_data', data, data_columns=True)   # For some reason, cannot set format='table'
     hdf.close()
 
     # Writes data for "execution_stats.csv"
-    execution_stats.to_csv('execution_stats.csv')
+    execution_stats.to_csv('execution_stats.csv', header=False)

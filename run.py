@@ -64,8 +64,11 @@ input_col = [
 
 # Defines formatting of output results column
 output_col = [
-                [sg.Txt('Trial Output', **ttl)],
-                [sg.Txt('_' * WIDTH)]
+                [sg.Txt('Trial Output', **ttl, key='title_output')],
+                [sg.Txt('_' * WIDTH)],
+                [sg.Txt(' ' * WIDTH)],
+                [sg.Image(filename='graph_placeholder.png', key='graph_output')],
+                [sg.Txt(' ' * WIDTH)]
                 ]
 
 # Combines columns into final GUI layout
@@ -75,6 +78,8 @@ layout = [
 
 # Creates window based on final GUI layout
 window = sg.Window('gprofile2', layout)
+
+values = {'trial_name': 'INIT', 'seed': 'INIT'}
 
 # Scans for button input events
 while True:
@@ -88,7 +93,11 @@ while True:
 
     # Executes gprofile2 simulation if 'Run' button pressed
     elif event in ('Run'):
-        gp2.execute(values)
+        master_folder, trial_folder = gp2.execute(values)
+        window['seed'].Update(value=f'{np.random.randint(0,100000000):08d}')
+        interference = f'{master_folder}/{trial_folder}/interference_cdf.png'
+        window['graph_output'].Update(filename=interference)
+        window['title_output'].Update(value=trial_folder)
 
 # Closes window
 window.close()
