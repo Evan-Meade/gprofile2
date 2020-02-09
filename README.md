@@ -35,13 +35,16 @@ Usage instructions:
 6. Run gprofile2.py on the galaxy list using a template glafic .input file
   * This bundle was designed to analyze time delays using config.input
   * "python gprofile2.py {template glafic input} {galaxy list} {random seed} {z lens} {z source}"
-  * Ex. "python gprofile2.py config.input gals.dat 12345678"
+  * Ex. "python gprofile2.py config.input gals.dat 12345678 .3 3"
   * Each successful run of this will create a new trial folder in Results/
 7. Analyze .npy results with analyzer.py
   * Direct analyzer.py to the appropriate directory and it will compile .npy's
   * "python analyzer.py path/to/all/npy/files"
   * Ex. "python analyzer.py Results/gals.dat---Trial000"
-8. Interpret given results or feed .npy files into further interpretation
+8. Interpret given results output to the trial's folder or feed .npy files into further interpretation
+
+KNOWN BUGS:
+* Current sampling techniques oversample from lenses with smaller caustic regions by forcing all lenses to have the same number of successful trials. This appears to result in smaller average time delays between images. This is in the process of being rectified under the 'area-match' branch, but will take a few more commits to fix since the solution requires the underlying datastructures to be fundamentally restructured.
 
 Created by Evan Meade (https://github.com/Evan-Meade, aka. kracken9500), 2019
 
