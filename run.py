@@ -1,18 +1,46 @@
+'''
+run.py (gprofile2)
+Evan Meade, 2020
+Research group of Dr. Lindsay King (UTD)
+
+Generates GUI for assigning trial parameters and viewing preliminary results.
+
+This script serves as a grahical front-end to gprofile2, a Python project
+which statistically samples and characterizes strong lensing of gravitational
+waves. It uses glafic, an executable developed by M. Oguri (2010), to
+actually solve each lens equation, while gprofile2 randomly samples over a
+physically accurate parameter space and compiles results. In order to simplify
+use, this script adds a visual tool for assigning parameter bounds manually.
+
+
+To-Do:
+- Add graphic update methods
+
+'''
+
+# External package imports
 import numpy as np
 import PySimpleGUI as sg
 
+# gprofile2 package imports
 import gprofile2 as gp2
 
 
+# Sets window theme
 sg.ChangeLookAndFeel('Dark')
 
+# Sets column width
 WIDTH = 80
+
+# Assigns style parameters for GUI items
 ttl = {'font': ('Helvetica', 30)}
 sec = {'font': ('Helvetica', 20)}
 inp = {'size': (12,1)}
 
+# Generates random seed
 default_seed = f'{np.random.randint(0,100000000):08d}'
 
+# Defines formatting of input parameters column
 input_col = [
                 [sg.Txt('Trial Configuration', **ttl)],
                 [sg.Txt('_' * WIDTH)],
@@ -34,23 +62,33 @@ input_col = [
                 [sg.Txt(' ' * WIDTH)]
                 ]
 
+# Defines formatting of output results column
 output_col = [
                 [sg.Txt('Trial Output', **ttl)],
                 [sg.Txt('_' * WIDTH)]
                 ]
 
+# Combines columns into final GUI layout
 layout = [
             [sg.Column(input_col), sg.Column(output_col)]
             ]
 
+# Creates window based on final GUI layout
 window = sg.Window('gprofile2', layout)
 
+# Scans for button input events
 while True:
+    # Prints event and values if button triggered
     event, values = window.read()
     print(event, values)
+
+    # Exits scanning loop if 'Exit' buttons pressed
     if event in (None, 'Exit'):
         break
+
+    # Executes gprofile2 simulation if 'Run' button pressed
     elif event in ('Run'):
         gp2.execute(values)
 
+# Closes window
 window.close()

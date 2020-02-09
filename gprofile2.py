@@ -3,8 +3,20 @@ gprofile2.py (gprofile2)
 Evan Meade, 2020
 Research group of Dr. Lindsay King (UTD)
 
-To Do:
-- add graphic update methods
+Conducts random sampling of multiply lensed systems and compiles results.
+
+Intended for use with glafic, developed by M. Oguri (2010). This script
+procedurally generates .input files for glafic with varied lenses and
+points to extrapolate statistical behavior over a given parameter space.
+Could be modified to test other functions over a given parameter space.
+
+NOTE: dat_file and config_file are deleted at end of execution; they are
+merely temporary files to aid in collection of statistics. Continuously
+overwritten by each run. Results are saved into the main dataframe: data.
+
+
+To-Do:
+- Add graphic update methods
 
 '''
 
@@ -18,7 +30,7 @@ import math
 from datetime import datetime
 import shutil
 
-# Library imports
+# External package imports
 import numpy as np
 import pandas as pd
 import PySimpleGUI as sg
@@ -42,6 +54,11 @@ def execute(values):
 
 
 def simulate(values):
+
+    '''
+    Simulation parameters and variable assignments
+    '''
+
     # Trial parameters
     trial_name = values['trial_name']
     num_samp = int(values['num_samp'])
@@ -109,14 +126,24 @@ def simulate(values):
 
     start_time = time.time()   # Used to time execution
 
-    # Loop structure runs over all lenses for num_samp good trials each
+    # Loop structure iterates until num_samp many trials with multiple lensing
     for i in range(0, num_samp):
         good_run = False   # Sets to true if system is multiply imaged
         while good_run == False:
             trials += 1   # Iterates trials since glafic is run
 
+            # Initializes new run parameter vector for trial
             v = pd.Series(index=cols, dtype='object')
+
+
+            '''
+            Assigns appropriate values to trial parameters
+            '''
+
+            # Logs run number
             v['run_number'] = int(trials)
+
+            # Generates and assigns lens parameters
             v['lens_sigma'] = gen_lens_disp(left_bounds, freqs, bin_size)
             v['lens_z'] = lens_z_min + lens_z_rng * random.random()
             v['lens_x'] = 0.0
@@ -124,15 +151,20 @@ def simulate(values):
             v['lens_ellip'] = gen_lens_ellip()
             v['lens_theta'] = 0.0
             v['lens_r_core'] = 0.0
+
+            # Generates  and assigns source parameters
             v['source_z'] = source_z_min + source_z_rng * random.random()
             v['source_x'] = source_x_min + source_x_rng * random.random()
             v['source_y'] = source_y_min + source_y_rng * random.random()
+
+            # Generates and assigns shear parameters
             v['shear_mag'] = gen_shear_mag()
             v['shear_z'] = v['source_z']
             v['shear_x'] = 0.0
             v['shear_y'] = 0.0
             v['shear_theta'] = gen_shear_angle()
             v['shear_convergence'] = gen_shear_convergence()
+
 
             # Creates temporary .input file for glafic system
             with open(config_file, 'w') as case:
@@ -174,6 +206,11 @@ def simulate(values):
         v['num_images'] = output[0,0]
         v['image_dat_output'] = output
         data = data.append(v, ignore_index=True)
+
+
+    '''
+    Results and clean up
+    '''
 
     # Updates execution statistics
     end_time = time.time()
@@ -256,12 +293,18 @@ gen_lens_disp()
 Returns velocity dispersion randomly sampled from phi_loc.
 '''
 def gen_lens_disp(left_bounds, freqs, bin_size):
+    # Initializes sigma variable
     sigma = 0
+
+    # Randomly selects bin from freqs
     bin_selector = random.random()
     for i in range(0, len(freqs)):
         if bin_selector <= freqs[i]:
+            # Uniformly samples from selected bin
             sigma = random.uniform(left_bounds[i], left_bounds[i] + bin_size)
             break
+
+    # Returns velocity dispersion
     return sigma
 
 
