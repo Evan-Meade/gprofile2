@@ -1,21 +1,14 @@
 '''
 analyzer.py (gprofile2)
-Evan Meade, 2019
+Evan Meade, 2020
 Research group of Dr. Lindsay King (UTD)
 
-This script compiles .npy binaries to analyze the entire lensing sample.
+Conducts analysis on results of lensing simulations from gprofile2.
 
-When called on a directory, it will create a master numpy array loading in
-results from all .npy binaries. Then, it computes a variety of statistics
-over the set, including visualizations.
 
-Dependencies:
-- Python3
-- numpy
-- matplotlib
-
-Execution format:
-python analyzer.py path/to/all/npy/files
+To-Do:
+- Add graphic update methods
+- Expand image number id capture in secondary dataframes
 
 '''
 
@@ -26,135 +19,77 @@ import math
 
 # Library imports
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
-# Reads in execution arguments
-folder = sys.argv[1]
 
-# Initializes full dat array
-dat = []
+def analyze():
+    analyze_images()
 
+    print('Analysis complete')
 
-'''
-main()
+def analyze_images():
+    trial_data = pd.read_hdf('data.h5', key='trial_data')
+    print(trial_data)
+    raw_img = np.array(trial_data['image_dat_output'])
 
-Main dat loading and processing loop.
+    # Initializes arrays for later writing
+    single_run_id = np.array([])
+    pair_run_id = np.array([])
+    num_images = np.array([])   # Number of images for each sampled system
+    total_mag = np.array([])   # Total magnification of each sampled system
+    pair_mags = np.array([])   # Magnification ratio for each image pair (unsigned)
+    pair_delays = np.array([])   # Delay between each image pair in days
+    image_delays = np.array([])   # Delay of each image relative to first image
+    image_mags = np.array([])   # Magnification of each image
+    min_delays = np.array([])   # Minimum relative delay between a system's image pairs
 
-Loads .npy data into dat using numpy. Then it processes that data into
-statistics and visualizations.
-'''
-def main():
-    load_dat()
-    process_dat()
+    tot_samps = len(raw_img)   # Total number of trials
 
-
-'''
-load_dat()
-
-Compiles all .npy binaries into singular dat[] array.
-'''
-def load_dat():
-    # Inherits global variables
-    global dat
-
-    # Moves to directory given as an argument
-    os.chdir(folder)
-
-    # Searches through directory for .npy files and appends to dat[]
-    for file in os.listdir():
-        if file.endswith(".npy"):
-            temp_dat = np.load(file, allow_pickle=True)
-            for i in range(0, len(temp_dat)):
-                dat.append(temp_dat[i])
-
-
-'''
-process_dat()
-
-Compiles basic statistics from dat[] into a few files in a new folder.
-
-All output placed in "../Results/Trialxxx" where xxx iterates from 000. Thus,
-multiple trials can have outputs organized in the same master folder.
-
-global_stats.dat:
-- Broad statistics related to the sampling space and execution parameters
-- Intended to be human-readable, so each line contains name followed by value
-- Contents
-    - Total Samples
-    - Total Number of Images
-    - Total Number of Image Pairs
-
-image_pairs.dat:
-- Statistics computed for each pair of images
-- Line for each pair of images in the same sample
-- Line format: (absolute time difference), ((mag leading) / (mag trailing))
-
-image_stats.dat:
-- Statistics computed for each sampled system
-- Line for each sampled system
-- Line format: (number of images), (total magnification)
-    - Total magnification is the sum of absolute mags of each image
-
-image_list.dat:
-- List of statistics for each individual image
-- Line for each image
-- Line format: (time delay), (magnification)
-    - Time delays are still relative to first image in units of days
-    - Magnifications here are given with their sign
-'''
-def process_dat():
-    global succ_percent   # Inherits global variables
-
-    # Initializes lists for later writing
-    num_images = []   # Number of images for each sampled system
-    total_mag = []   # Total magnification of each sampled system
-    pair_mags = []   # Magnification ratio for each image pair (unsigned)
-    pair_delays = []   # Delay between each image pair in days
-    image_delays = []   # Delay of each image relative to first image
-    image_mags = []   # Magnification of each image
-    min_delays = []   # Minimum relative delay between a system's image pairs
-
-    tot_samps = len(dat)
-
-    # Loops through dat[] appending relevant statistics as needed
+    # Loops through raw image data appending relevant statistics as needed
     for i in range(0, tot_samps):
-        for j in range(0, len(dat[i])):
-            num_images.append(int(round(dat[i][j][0][0])))   # Number of imgs
-            lens_mag = 0   # Used to sum up total magnification for a sample
+        run = trial_data.loc[i, 'run_id']   # Records run id for each image set
 
-            cmin_delay = -1.0   # Tracks current pairwise min_delay
+        num_images = np.append(num_images, int(round(raw_img[i][0,0])))   # Number of imgs
+        lens_mag = 0   # Used to sum up total magnification for a sample
 
-            # Loops through all images; line 0 contains some global stats
-            for k in range(1, len(dat[i][j])):
-                lens_mag += abs(dat[i][j][k][2])   # Add to total mag
+        cmin_delay = -1.0   # Tracks current pairwise min_delay
 
-                # Statistics for each image
-                ktime = dat[i][j][k][3]
-                kmag = dat[i][j][k][2]
-                image_delays.append(ktime)
-                image_mags.append(kmag)
+        # Loops through all images; line 0 contains some global stats
+        for k in range(1, len(raw_img[i])):
+            single_run_id = np.append(single_run_id, run)   # Updates run id array
 
-                # Loops through pairs of images, avoiding doubles
-                for l in range(k + 1, len(dat[i][j])):
-                    # Statistics for paired image
-                    ltime = dat[i][j][l][3]
-                    lmag = dat[i][j][l][2]
+            lens_mag += abs(raw_img[i][k,2])   # Add to total mag
 
-                    # Pair's mag ratio computed Leading / Trailing (unsigned)
-                    if ktime < ltime:
-                        pair_mags.append(abs(kmag)/abs(lmag))
-                    else:
-                        pair_mags.append(abs(lmag)/abs(kmag))
+            # Statistics for each image
+            ktime = raw_img[i][k,3]
+            kmag = raw_img[i][k,2]
+            image_delays = np.append(image_delays, ktime)
+            image_mags = np.append(image_mags, kmag)
 
-                    # Pair's relative time delay in days
-                    pair_delays.append(abs(ktime - ltime))
+            # Loops through pairs of images, avoiding doubles
+            for l in range(k + 1, len(raw_img[i])):
+                pair_run_id = np.append(pair_run_id, run)   # Updates pair run id array
 
-                    # Compares each pair's delay against current min
-                    if cmin_delay < 0 or abs(ktime - ltime) < cmin_delay:
-                        cmin_delay = abs(ktime - ltime)
+                # Statistics for paired image
+                ltime = raw_img[i][l,3]
+                lmag = raw_img[i][l,2]
 
-            total_mag.append(lens_mag)   # Total magnification for sample
-            min_delays.append(cmin_delay)   # Min delay for sample
+                # Pair's mag ratio computed Leading / Trailing (unsigned)
+                if ktime < ltime:
+                    pair_mags = np.append(pair_mags, abs(kmag)/abs(lmag))
+                else:
+                    pair_mags = np.append(pair_mags, abs(lmag)/abs(kmag))
+
+                # Pair's relative time delay in days
+                pair_delays = np.append(pair_delays, abs(ktime - ltime))
+
+                # Compares each pair's delay against current min
+                if cmin_delay < 0 or abs(ktime - ltime) < cmin_delay:
+                    cmin_delay = abs(ktime - ltime)
+
+        total_mag = np.append(total_mag, lens_mag)   # Total magnification for sample
+        min_delays = np.append(min_delays, cmin_delay)   # Min delay for sample
 
     '''
     For this next section, it is just procedurally writing different output
@@ -164,29 +99,30 @@ def process_dat():
     same trial folder.
     '''
 
-    # Writes data for "global_stats.dat"
-    with open("global_stats.dat", 'w') as stats:
-        stats.writelines(f"Total Samples: {tot_samps}\n")
-        stats.writelines(f"Total Number of Images: {sum(num_images)}\n")
-        stats.writelines(f"Total Number of Image Pairs: {len(pair_delays)}\n")
-        stats.close()
+    # Opens up the main data.h5 file
+    hdf = pd.HDFStore('data.h5')
 
-    # Writes data for "image_pairs.dat"
-    with open("image_pairs.dat", 'w') as pairs:
-        for i in range(0, len(pair_delays)):
-            pairs.writelines(f"{pair_delays[i]},{pair_mags[i]}\n")
-        pairs.close()
+    # Enters global stats into the file
+    global_stats = pd.Series({'total_samples': tot_samps,
+                                'total_images': np.sum(num_images),
+                                'total_image_pairs': pair_delays.shape[0]})
+    hdf.put('global_stats', global_stats, format='table', data_columns=True)
 
-    # Writes data for "image_stats.dat"
-    with open("image_stats.dat", 'w') as images:
-        for i in range(0, len(num_images)):
-            images.writelines(f"{num_images[i]},{total_mag[i]}\n")
-        images.close()
+    # Appends total_mag and min_delay columns to data
+    trial_data['total_mag'] = total_mag
+    trial_data['min_delay'] = min_delays
+    hdf.remove('trial_data')
+    hdf.put('trial_data', trial_data, data_columns=True)
 
-    # Writes data for "image_list.dat"
-    with open("image_list.dat", 'w') as imgs:
-        for i in range(0, len(image_delays)):
-            imgs.writelines(f"{image_delays[i]},{image_mags[i]}\n")
+    # Enters stats for each pair of images in the same trial
+    image_pairs = pd.DataFrame({'pair_run_id': pair_run_id,
+                                'pair_delays': pair_delays,
+                                'pair_mags': pair_mags})
+    hdf.put('image_pairs', image_pairs, format='table', data_columns=True)
+
+    # Closes main data.h5 file
+    hdf.close()
+
 
     '''
     This section utilizes the same decomposed data written to files to
@@ -212,7 +148,7 @@ def process_dat():
                 break
 
         # Appends percentage of min delays below days
-        percent_below.append(num_below / len(sorted_min_delays))
+        percent_below.append(num_below / len(sorted_min_delays) * 100)
 
     # Plots CDF for probability of interference in n-Day observation window
     plt.figure(1)   # Numbers plot for multiple figure display at end
@@ -220,7 +156,8 @@ def process_dat():
     plt.xlabel("Days")
     plt.ylabel("% of Systems with Min TD Below Days")
     plt.title("Likelihood of Interference with n-Day Observation Windows")
-    plt.savefig("interference_cdf.png")
+    plt.savefig("interference_cdf.png", dpi=200)
+
     #plt.show()
 
     # Plots magnification ratio against time delay between each image pair
@@ -246,12 +183,9 @@ def process_dat():
     plt.xlabel("Log of Time Delay (Days)")
     plt.ylabel("Number of Systems")
     plt.title("Histogram of Time Delays")
-    plt.savefig("delay_histogram.png")
-
-    # Shows all figures
-    #plt.show()
+    plt.savefig("log_td.png")
 
 
-# Calls main subroutine after defining all functions
-if __name__ == '__main__':
-    main()
+
+    # Prints completion statement
+    print('Image analysis complete')

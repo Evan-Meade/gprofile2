@@ -9,3 +9,16 @@ case.input
 
 # Ignore galaxy lists
 *.dat
+
+# Ignore .fits images
+*.fits
+
+# Ignore __pycache__
+__pycache__/
+
+# Ignore .ipynb work
+.ipynb_checkpoints/
+*.ipynb
+
+# Ignore HDF5 files
+*.h5
