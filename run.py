@@ -64,7 +64,7 @@ input_col = [
 
 # Defines formatting of output results column
 output_col = [
-                [sg.Txt('Trial Output', **ttl, key='title_output')],
+                [sg.Txt('Trial Output                   ', **ttl, key='title_output')],
                 [sg.Txt('_' * WIDTH)],
                 [sg.Txt(' ' * WIDTH)],
                 [sg.Image(filename='graph_placeholder.png', key='graph_output')],
@@ -94,6 +94,7 @@ while True:
     # Executes gprofile2 simulation if 'Run' button pressed
     elif event in ('Run'):
         master_folder, trial_folder = gp2.execute(values)
+        print(trial_folder)
         window['seed'].Update(value=f'{np.random.randint(0,100000000):08d}')
         interference = f'{master_folder}/{trial_folder}/interference_cdf.png'
         window['graph_output'].Update(filename=interference)
