@@ -4,8 +4,7 @@ Evan Meade, 2020
 Research group of Dr. Lindsay King (UTD)
 
 To Do:
-- add support for saving full .dat output to the data dataframe
-- figure out why resulting HDF5 file cannot be read
+- add graphic update methods
 
 '''
 
@@ -88,7 +87,7 @@ def simulate(values):
     source_x_max = samp_radius
     source_y_max = samp_radius
     source_x_rng = source_x_max - source_x_min
-    source_y_rng = source_y_max - source_y_max
+    source_y_rng = source_y_max - source_y_min
 
     # Initializes execution statistics to be defined later
     trials = 0
@@ -116,8 +115,8 @@ def simulate(values):
         while good_run == False:
             trials += 1   # Iterates trials since glafic is run
 
-            v = pd.Series(index=cols)
-            v['run_number'] = trials
+            v = pd.Series(index=cols, dtype='object')
+            v['run_number'] = int(trials)
             v['lens_sigma'] = gen_lens_disp(left_bounds, freqs, bin_size)
             v['lens_z'] = lens_z_min + lens_z_rng * random.random()
             v['lens_x'] = 0.0
@@ -173,8 +172,8 @@ def simulate(values):
         # If good sample (multiply imaged), writes to data
         print(output)
         v['num_images'] = output[0,0]
-        #v['image_dat_output'] = output
-        data.append(v, ignore_index=True)
+        v['image_dat_output'] = output
+        data = data.append(v, ignore_index=True)
 
     # Updates execution statistics
     end_time = time.time()
@@ -359,7 +358,7 @@ def save_data(data, trial_name, execution_stats):
 
     # Saves data to an HDF5 file
     hdf = pd.HDFStore('data.h5')
-    hdf.put('data', data, format='table', data_columns=True)
+    hdf.put('data', data, data_columns=True)
     hdf.close()
 
     # Writes data for "execution_stats.csv"
