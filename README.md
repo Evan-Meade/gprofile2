@@ -21,6 +21,8 @@ The modular design of each step is intended to make it easy to divide tasks simp
   * Developed with version 3.1.1 in a Python3 venv
 * PySimpleGUI
   * Devleoped with version 4.15.2 in a Python3 venv
+* Tables
+  * Developed with version 3.6.1 in a Python3 venv
 * glafic (added to $PATH)
   * Can be downloaded at https://www.slac.stanford.edu/~oguri/glafic/
   * UNIX only (Mac OSX and Linux (64 bit))
