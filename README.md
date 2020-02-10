@@ -8,7 +8,7 @@ A simple GUI is implemented which assists in setting sampling parameters and dis
 The modular design of each step is intended to make it easy to divide tasks simply across multiple computing processes. Multiple simulations can be run independently, and then combined by merging Pandas DataFrames.
 
 ## Screenshots
-
+![Sample screenshot](sample_screenshot.png)
 
 ## Dependencies:
 * Python3
