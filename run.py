@@ -14,7 +14,8 @@ use, this script adds a visual tool for assigning parameter bounds manually.
 
 
 To-Do:
-- Add graphic update methods
+- Add more graphic update methods
+- Add progress bar
 
 '''
 
@@ -79,8 +80,6 @@ layout = [
 # Creates window based on final GUI layout
 window = sg.Window('gprofile2', layout)
 
-values = {'trial_name': 'INIT', 'seed': 'INIT'}
-
 # Scans for button input events
 while True:
     # Prints event and values if button triggered
@@ -94,7 +93,7 @@ while True:
     # Executes gprofile2 simulation if 'Run' button pressed
     elif event in ('Run'):
         master_folder, trial_folder = gp2.execute(values)
-        print(trial_folder)
+        print(f'\nResults obtained for {trial_folder}\n')
         window['seed'].Update(value=f'{np.random.randint(0,100000000):08d}')
         interference = f'{master_folder}/{trial_folder}/interference_cdf.png'
         window['graph_output'].Update(filename=interference)

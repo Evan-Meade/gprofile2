@@ -5,9 +5,15 @@ Research group of Dr. Lindsay King (UTD)
 
 Conducts analysis on results of lensing simulations from gprofile2.
 
+This script contains analysis functions which can be implemented on simulation
+data produced by gprofile2.py. It derives and records new features from
+data.h5 and creates visualizations from them.
+
+NOTE: It does not change working directory, so calls must be from a current
+working directory containing data.h5.
+
 
 To-Do:
-- Add graphic update methods
 - Expand image number id capture in secondary dataframes
 
 '''
@@ -23,14 +29,39 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+'''
+analyze()
+
+Calls analysis functions on the current working directory.
+
+This function serves as an intermediary between the main simulation methods in
+gprofile2.py and the analytical methods in analyzer.py.
+
+NOTE: It does not change working directory, so calls must be from a current
+working directory containing data.h5.
+'''
 def analyze():
+    # Calls image analysis function
     analyze_images()
 
-    print('Analysis complete')
+    # Prints final completion statement
+    print('\nAnalysis complete\n')
 
+
+'''
+analyze_images()
+
+Compiles statistics and graphics examining strong lensed images.
+
+This is a large function which operates on the output data.h5 from gprofile2.py
+and computes useful statistics for sets and pairs of images. It adds these as
+new columns or new DataFrames in data.h5. It also creates useful visualizations
+to show relationships between variables.
+'''
 def analyze_images():
+    # Pulls in data from data.h5
     trial_data = pd.read_hdf('data.h5', key='trial_data')
-    print(trial_data)
+    # print(trial_data)
     raw_img = np.array(trial_data['image_dat_output'])
 
     # Initializes arrays for later writing
@@ -188,4 +219,4 @@ def analyze_images():
 
 
     # Prints completion statement
-    print('Image analysis complete')
+    print('\nImage analysis complete\n')

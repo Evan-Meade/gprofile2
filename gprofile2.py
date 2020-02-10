@@ -16,7 +16,7 @@ overwritten by each run. Results are saved into the main dataframe: data.
 
 
 To-Do:
-- Add graphic update methods
+- Add progress bar
 
 '''
 
@@ -53,20 +53,42 @@ ALPHA = 0.94
 BETA = 1.85
 
 
+'''
+execute()
+
+Calls simulation methods and returns resulting folder path.
+
+This is the main callable function for gprofile2.py, which serves as the
+interface between the GUI in run.py and the simulation() function in
+gprofile2.py.
+'''
 def execute(values):
     # Passes trial values to the simulation function
-    print('gprofile2 executed')
+    print('\ngprofile2 executed\n')
     simulate(values)
 
+    # Pulls values for returning trial folder name
     trial_name = values['trial_name']
     seed = values['seed']
 
     # Prints final completion statement
-    print("\nExecution complete")
+    print("\nExecution complete\n")
 
+    # Returns master and trial folder names
     return f'{MASTER_FOLDER}', f'{trial_name}---{seed}'
 
 
+'''
+simulate()
+
+Conducts statistical sampling of lensed systems and compiles results.
+
+This is the main function of the entire gprofile2 project. It takes in user-
+defined parameters, and conducts sampling of lensed systems under those
+parameters. It filters out only mulitply lensed systems. It uses glafic to
+solve each lens equation. After finding all images, it compiles results and
+feeds them into analyzer.py.
+'''
 def simulate(values):
 
     '''
@@ -216,7 +238,7 @@ def simulate(values):
                 good_run = True
 
         # If good sample (multiply imaged), writes to data
-        print(output)
+        # print(output)
         v['num_images'] = output[0,0]
         v['image_dat_output'] = output
         data = data.append(v, ignore_index=True)
@@ -241,7 +263,7 @@ def simulate(values):
     os.remove(dat_file)
 
     # Prints entire data; more useful for debugging on small ranges
-    print(data)
+    # print(data)
 
     # Writes data to Results
     save_data(data, trial_name, execution_stats, seed)
@@ -250,7 +272,7 @@ def simulate(values):
     print(f"\n\nTotal Samples: {num_samp}\nTotal Trials: {trials}")
     print(f"\nPercent Good: {succ_percent}%")
     print(f"\nTime Elapsed (sec): {end_time - start_time}\n")
-    print("\nSimulation complete")
+    print("\nSimulation complete\n")
 
     # Analyzes simulation results
     analyzer.analyze()
@@ -390,7 +412,10 @@ save_data()
 Saves data to an HDF5 file for analysis later.
 
 Saves data with pandas, and also compiles basic execution statistics not
-readily contained by data in a new .dat file.
+readily contained by data in a new .csv file.
+
+data.h5:
+- Contains main dataframe (data), including input parameters and results
 
 execution_stats.csv:
 - Basic statistics relating to the script's execution
@@ -411,9 +436,7 @@ def save_data(data, trial_name, execution_stats, seed):
         os.mkdir(MASTER_FOLDER)
         os.chdir(MASTER_FOLDER)
 
-    # Creates and moves to new folder based on current time and num_samp
-    # current_time = time.time()
-    # test_time = str(datetime.fromtimestamp(current_time)).replace(' ', '_')
+    # Creates and moves to new folder based on trial_name and seed
     folder = f"{trial_name}---{seed}"
     os.mkdir(folder)
     os.chdir(folder)
