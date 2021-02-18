@@ -197,24 +197,24 @@ def analyze_images():
     plt.xlabel("Time Delay (Days)")
     plt.ylabel("Mag(Leading) / Mag(Trailing)")
     plt.title("Image Pair Mag Ratios Vs. TD")
-    plt.savefig("image_ratios.png")
+    plt.savefig("image_ratios.png", dpi=200)
     #plt.show()
 
     # Preps image_delays for use in log histogram
     chopped_image_delays = []
     for i in range(0, len(image_delays)):
         # Trims elements to be within given range
-        if image_delays[i] > 0 and image_delays[i] <= 45:
+        if image_delays[i] > 0:
             # Appends log of each element in given range
-            chopped_image_delays.append(math.log(image_delays[i]))
+            chopped_image_delays.append(math.log10(image_delays[i]))
 
     # Plots a log histogram of the image delays relative to first image
     plt.figure(3)   # Numbers plot for multiple figure display at end
     plt.hist(chopped_image_delays, bins=50)
-    plt.xlabel("Log of Time Delay (Days)")
+    plt.xlabel("Log10 of Time Delay (Days)")
     plt.ylabel("Number of Systems")
     plt.title("Histogram of Time Delays")
-    plt.savefig("log_td.png")
+    plt.savefig("log_td.png", dpi=200)
 
 
 

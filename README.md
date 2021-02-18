@@ -11,18 +11,10 @@ The modular design of each step is intended to make it easy to divide tasks simp
 ![Sample screenshot](sample_screenshot.png)
 
 ## Dependencies:
-* Python3
-  * Developed with Python 3.6.8
-* NumPy
-  * Developed with version 1.17.3 in a Python3 venv
-* Pandas
-  * Developed with version 1.0.1 in a Python3 venv
-* matplotlib
-  * Developed with version 3.1.1 in a Python3 venv
-* PySimpleGUI
-  * Devleoped with version 4.15.2 in a Python3 venv
-* Tables
-  * Developed with version 3.6.1 in a Python3 venv
+* Python 3 (and pip/conda for package management)
+* tkinter (for Python 3)
+  * More information at https://docs.python.org/3/library/tkinter.html
+  * On Ubuntu, can install with `sudo apt install python3-tk`
 * glafic (added to $PATH)
   * Can be downloaded at https://www.slac.stanford.edu/~oguri/glafic/
   * UNIX only (Mac OSX and Linux (64 bit))
@@ -32,14 +24,16 @@ NOTE: Developed in a UNIX environment (Ubuntu 18.04); untested elsewhere.
 
 ## Usage instructions:
 1. Clone repository or download and unzip source code for gprofile2
-2. Install glafic
-3. In bash shell, navigate to gprofile2 master directory
-4. Create or activate appropriate venv (including Python3 and required packages)
-5. Run the GUI with 'python run.py'
-6. Enter desired simulation parameters (if different from default values)
-7. Press 'Run'
-8. View summary of results in the window
-9. Conduct further analysis as desired with raw data stored as HDF5 format in '.../gprofile2/Results/{trial_name}---{seed}/data.h5'
+1. Install glafic
+1. In bash shell, navigate to gprofile2 master directory
+1. Create or activate appropriate Python 3 virtual environment
+1. Install required packages using `pip install -r requirements.txt`
+1. Install tkinter
+1. Run the GUI with 'python run.py'
+1. Enter desired simulation parameters (if different from default values)
+1. Press 'Run'
+1. View summary of results in the window
+1. Conduct further analysis as desired with raw data stored as HDF5 format in '.../gprofile2/Results/{trial_name}---{seed}/data.h5'
 
 ## KNOWN BUGS:
 * When running successive trials in the same window instance, graphs overlap instead of replacing each other
