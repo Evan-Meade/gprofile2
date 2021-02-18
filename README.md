@@ -1,6 +1,8 @@
 # gprofile2
 Statistically characterizes gravitational lensing of gravitational waves
 
+**NOTE: I am currently developing new Python lensing models which will be released soon; these Monte Carlo models are from 2019**
+
 By utilizing the computational methods of glafic, an executable developed by M. Oguri (2010), these scripts can rapidly generate, sample, and analyze a list of galactic lenses over a representative sampling distribution. Galactic lenses are randomly sampled over the SIE lens parameter space outlined in M. Oguri (2018).
 
 A simple GUI is implemented which assists in setting sampling parameters and displaying visualizations. More thorough results and raw data are saved in HDF5 format.
